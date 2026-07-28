@@ -18,3 +18,8 @@ npm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+_preview.html
+
+# 스크래치/백업 (커밋 제외)
+_*
+*.bak
