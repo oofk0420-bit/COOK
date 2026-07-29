@@ -725,9 +725,42 @@
   .sos-ai-bubble{ display:flex; gap:10px; align-items:flex-start; margin-top:12px; padding:13px 15px; border-radius:16px; background:#FFF8E4; border:1.4px solid var(--orange); animation:niFade .2s ease; }
   .sos-ai-egg{ width:34px; height:34px; flex:0 0 auto; object-fit:contain; }
   .sos-ai-bubble p{ margin:0; font-size:14px; line-height:1.6; color:var(--ink); font-weight:500; }
+  /* 데스크톱: 폰 카드 라운드 처리 */
+  @media(min-width:391px){ .app{ border-radius:26px; } }
+  /* 첫 진입 온보딩 */
+  .onboard{ position:fixed; inset:0; z-index:200; display:none; background:linear-gradient(180deg,#E4F0D6,#FFFDF7 55%); }
+  .onboard.on{ display:grid; place-items:center; animation:fade .25s ease; }
+  .ob-card{ width:calc(100% - 48px); max-width:340px; text-align:center; padding:8px 6px 4px; animation:niFade .35s ease; }
+  .ob-egg{ width:120px; height:120px; object-fit:contain; margin:0 auto 14px; display:block;
+    filter:drop-shadow(0 12px 18px rgba(74,64,52,.18)); }
+  .ob-title{ font-family:var(--hand); font-size:24px; color:var(--ink); letter-spacing:.01em; line-height:1.35; margin-bottom:10px; }
+  .ob-sub{ font-size:13.5px; color:var(--ink-soft); font-weight:600; line-height:1.55; margin-bottom:20px; }
+  .ob-points{ display:flex; flex-direction:column; gap:11px; text-align:left; margin-bottom:22px; }
+  .ob-pt{ display:flex; align-items:center; gap:11px; background:var(--paper); border:1.4px solid var(--line); border-radius:15px; padding:12px 14px; font-size:13px; color:var(--ink); font-weight:600; line-height:1.4; box-shadow:0 4px 12px rgba(74,64,52,.05); }
+  .ob-pt b{ color:var(--orange-dk); }
+  .ob-pt .ob-ic{ font-size:20px; flex:0 0 auto; }
+  .ob-btn{ width:100%; padding:16px; border:none; border-radius:16px; cursor:pointer; font-family:"GmarketSansBold",Pretendard,sans-serif; font-size:16px; color:#fff; background:var(--orange-dk); box-shadow:0 8px 20px rgba(245,179,1,.3); transition:.15s; }
+  .ob-btn:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+  .ob-btn:active{ transform:translateY(0); }
+  .ob-slogan{ font-family:var(--hand); font-size:14px; color:var(--olive); margin-top:16px; }
 </style>
 </head>
 <body>
+<!-- 첫 진입 온보딩 (3초 안내, 한 번만) -->
+<div class="onboard" id="onboard">
+  <div class="ob-card">
+    <img class="ob-egg" id="obEgg" alt="">
+    <div class="ob-title">안녕하세요, 한끼요정이에요! 🥚</div>
+    <div class="ob-sub">냉장고에 있는 재료만 알려주세요.<br>지금 만들 수 있는 요리를 찾아드릴게요.</div>
+    <div class="ob-points">
+      <div class="ob-pt"><span class="ob-ic">🥬</span><b>재료</b>만 넣으면 → AI가 만들 수 있는 요리 추천</div>
+      <div class="ob-pt"><span class="ob-ic">🔄</span><b>없는 재료</b>는 → 대체법까지 알려줘요</div>
+      <div class="ob-pt"><span class="ob-ic">👩‍🍳</span>만들다 <b>막히면</b> → 짝꿍에게 물어보세요</div>
+    </div>
+    <button class="ob-btn" onclick="closeOnboard()">시작하기 →</button>
+    <div class="ob-slogan">없어도 괜찮아, 있는 걸로 충분해요.</div>
+  </div>
+</div>
 <div class="app">
 
   <!-- ===== 홈 ===== -->
@@ -2337,8 +2370,13 @@ steps는 요리 초보용으로 아주 쉽게 써. 애매한 양·불세기·상
   function renderExplore(){ renderExCats(); renderExHot(); renderExHotCards(); renderExFeed(); }
   window.renderExplore=renderExplore;
 
+  // 첫 진입 온보딩 (한 번만)
+  window.closeOnboard=function(){ var o=document.getElementById("onboard"); if(o)o.classList.remove("on"); try{localStorage.setItem("hankki_onboarded","1")}catch(e){} };
+  function maybeOnboard(){ try{ if(localStorage.getItem("hankki_onboarded")) return; }catch(e){}
+    var o=document.getElementById("onboard"); if(!o)return; var e=document.getElementById("obEgg"); if(e)e.src=EGG.wave; o.classList.add("on"); }
+
   loadME(); renderMe();   // 저장된 로그인·설정 복원
-  renderRail(); renderChips(); renderDemoResult("계란");
+  renderRail(); renderChips(); renderDemoResult("계란"); maybeOnboard();
 </script>
 </body>
 </html>
