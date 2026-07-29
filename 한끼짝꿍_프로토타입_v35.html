@@ -1841,6 +1841,16 @@
     window.scrollTo({top:0});
   }
 
+  // AI 호출 — ① Vercel 서버리스 프록시(/api/chat, 실제 AI) → ② claude.ai 아티팩트 직접 호출 → 실패 시 데모 폴백
+  async function callAI(payload){
+    try{
+      const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    const r2=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(Object.assign({model:"claude-sonnet-4-6"},payload))});
+    return await r2.json();
+  }
   async function run(mode){
     const btn=mode==="dish"?document.querySelector("#s-dish .bigfield .plusbtn"):document.getElementById("runIng");
     const box=mode==="dish"?document.getElementById("resDish"):document.getElementById("resIng");
@@ -1873,9 +1883,7 @@ steps는 요리 초보용으로 아주 쉽게 써. 애매한 양·불세기·상
 가진 재료:${ingA.join(", ")}`;
     }
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,messages:[{role:"user",content:prompt}]})});
-      const data=await res.json();
+      const data=await callAI({max_tokens:1500,messages:[{role:"user",content:prompt}]});
       let t=(data.content||[]).map(b=>b.text||"").join("").trim().replace(/```json/g,"").replace(/```/g,"").trim();
       const obj=JSON.parse(t);
       if(mode==="dish") renderDish(obj,box); else renderSuggest(obj,box);
