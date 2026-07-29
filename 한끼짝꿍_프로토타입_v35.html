@@ -711,6 +711,20 @@
   .ex-au-it-n{ font-family:"GmarketSansBold",Pretendard,sans-serif; font-size:14px; color:var(--ink); }
   .ex-au-it-m{ font-size:12px; color:var(--blush); font-weight:700; margin-top:3px; }
   .ex-au-x{ position:absolute; top:14px; right:16px; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--paper); cursor:pointer; color:var(--ink-soft); font-size:13px; }
+  /* 쿡모드: 짝꿍에게 직접 물어보기 (실시간 AI) */
+  .sos-ai{ margin-top:16px; padding-top:16px; border-top:1.5px solid var(--line); }
+  .sos-ai-label{ font-family:"GmarketSansBold",Pretendard,sans-serif; font-size:13px; color:var(--ink); margin-bottom:10px; }
+  .sos-ai-field{ display:flex; gap:8px; }
+  .sos-ai-field input{ flex:1; padding:12px 14px; border:1.5px solid var(--line); border-radius:13px; font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper-dk); outline:none; }
+  .sos-ai-field input:focus{ border-color:var(--orange); background:#fff; }
+  .sos-ai-field button{ flex:0 0 auto; padding:0 16px; border:none; border-radius:13px; cursor:pointer; font-family:"GmarketSansBold",Pretendard,sans-serif; font-size:13.5px; color:#fff; background:var(--orange-dk); }
+  .sos-ai-field button:active{ transform:translateY(1px); }
+  .sos-ai-loading{ display:flex; align-items:center; gap:4px; margin-top:12px; font-size:13px; color:var(--ink-soft); font-weight:600; }
+  .sos-ai-loading span{ width:6px; height:6px; border-radius:50%; background:var(--orange-dk); display:inline-block; animation:adrPulse 1s infinite; }
+  .sos-ai-loading span:nth-child(2){ animation-delay:.16s; } .sos-ai-loading span:nth-child(3){ animation-delay:.32s; margin-right:4px; }
+  .sos-ai-bubble{ display:flex; gap:10px; align-items:flex-start; margin-top:12px; padding:13px 15px; border-radius:16px; background:#FFF8E4; border:1.4px solid var(--orange); animation:niFade .2s ease; }
+  .sos-ai-egg{ width:34px; height:34px; flex:0 0 auto; object-fit:contain; }
+  .sos-ai-bubble p{ margin:0; font-size:14px; line-height:1.6; color:var(--ink); font-weight:500; }
 </style>
 </head>
 <body>
@@ -863,6 +877,14 @@
     <p class="sos-sub">😊 괜찮아요, 누구나 한 번쯤 태워먹어요.<br>어떤 상황인지 알려주면 바로 도와드릴게요.</p>
     <div class="fail-opts" id="sosOpts"></div>
     <div class="fail-fix" id="sosFix"></div>
+    <div class="sos-ai">
+      <div class="sos-ai-label">🤖 다른 상황인가요? 짝꿍에게 직접 물어보세요</div>
+      <div class="sos-ai-field">
+        <input id="sosAiInput" placeholder="예: 불이 너무 센 것 같아요" onkeydown="if(event.key==='Enter')askCookAI()">
+        <button onclick="askCookAI()">물어보기</button>
+      </div>
+      <div class="sos-ai-answer" id="sosAiAnswer"></div>
+    </div>
   </div>
 
   <!-- 로그인 모달 -->
@@ -1189,8 +1211,25 @@
   function openSOS(){
     document.getElementById("sosOpts").innerHTML=FAILS.map((f,i)=>`<button class="fail-opt" onclick="showSOSFix(${i},this)">${f.label}</button>`).join("");
     document.getElementById("sosFix").innerHTML="";
+    var ai=document.getElementById("sosAiAnswer"); if(ai) ai.innerHTML="";
+    var inp=document.getElementById("sosAiInput"); if(inp) inp.value="";
     document.getElementById("sosScrim").classList.add("on");
     document.getElementById("sosSheet").classList.add("on");
+  }
+  // 쿡모드 실시간 AI 질문 — 현재 요리·단계를 문맥으로 AI가 답
+  async function askCookAI(){
+    const inp=document.getElementById("sosAiInput"); const box=document.getElementById("sosAiAnswer");
+    const q=(inp.value||"").trim(); if(!q) return;
+    box.innerHTML=`<div class="sos-ai-loading"><span></span><span></span><span></span> 짝꿍이 생각 중…</div>`;
+    const step=(STEPS[stepIdx-1]&&STEPS[stepIdx-1].text)||"";
+    const prompt=`너는 요리 초보를 돕는 다정한 요리 짝꿍이야. 지금 사용자는 '${cookDishName||"요리"}'를 만드는 중이고, 현재 단계는 "${step}"야. 사용자가 요리 도중 이렇게 물었어: "${q}". 초보 눈높이로 2~3문장, 구체적으로(불세기 예: 중불/가스레인지 4~5, 시간, 상태 등) 안심시키며 답해줘. 마크다운·JSON 없이 자연스러운 한국어 문장으로만.`;
+    try{
+      const data=await callAI({max_tokens:400,messages:[{role:"user",content:prompt}]});
+      const t=((data.content||[]).map(b=>b.text||"").join("")).trim();
+      box.innerHTML=`<div class="sos-ai-bubble"><img class="sos-ai-egg" src="${EGG.happy}" alt=""><p>${t?t.replace(/\n/g,"<br>"):"음… 조금만 더 자세히 물어봐 주실래요?"}</p></div>`;
+    }catch(e){
+      box.innerHTML=`<div class="sos-ai-bubble"><img class="sos-ai-egg" src="${EGG.sad}" alt=""><p>지금은 연결이 불안정해요. 잠시 후 다시 물어봐 주세요. 그동안은 위의 상황별 도움을 참고하세요!</p></div>`;
+    }
   }
   function closeSOS(){
     document.getElementById("sosScrim").classList.remove("on");
