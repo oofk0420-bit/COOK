@@ -1,5 +1,11 @@
 # 한끼짝꿍 — 프로젝트 인수인계 (Claude Code용)
 
+> ## ⭐ 현재 상태 (최신 — 다른 컴퓨터/다음 세션은 이것부터)
+> - **실제 배포됨(AI 작동)**: https://cook-nu-flax.vercel.app — Vercel 정적호스팅 + 서버리스 프록시 `api/chat.js`가 Claude(`claude-opus-4-8`)를 호출. API 키는 Vercel 환경변수 `ANTHROPIC_API_KEY`에만 있음(코드/브라우저 미노출). `git push` 시 자동 재배포.
+> - **소스/문서**: 저장소 https://github.com/oofk0420-bit/COOK · 본 앱은 여전히 **단일 파일 `한끼짝꿍_프로토타입_v35.html`**. 서비스 기획서·제품 설명서는 `문서/` 폴더.
+> - **로컬 AI**: 로컬(python http server)에선 프록시가 없어 AI 대신 데모 폴백으로 동작(정상). 실제 AI는 Vercel 링크에서.
+> - **최근 추가된 것**: 실제 AI 프록시 · 알레르기·식성을 AI 프롬프트에 반영(개인화+안전) · 저장 영속성(localStorage, `saveME/loadME`) · 쿡모드 실시간 AI 질문(`askCookAI`) · 온보딩(`maybeOnboard`) · 인기요리 실사진 37종(`FOODPHOTO`) · 홈 AI추천행 클릭.
+
 이 문서를 먼저 읽고 작업을 시작해줘. 함께 있는 `한끼짝꿍_프로토타입_v35.html`이 현재까지의 완성 프로토타입이야. 이걸 기반으로 (1) 코드를 깔끔한 구조로 리팩터링하고 (2) 실제 배포 가능한 앱으로 만들고 싶어.
 
 - 공모전: **나는 Solo AI 2026** (부산정보산업진흥원 주최) · 마감 **7/31(금) 14:00**
