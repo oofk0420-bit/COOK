@@ -1908,6 +1908,10 @@
     </div>`;
 
     let prompt;
+    // 로그인 사용자의 알레르기·식성을 AI에 반영 (개인화 + 안전)
+    const me = (typeof ME!=="undefined" && ME.loggedIn && (ME.allergies.length || ME.diet.length))
+      ? `\n[사용자 맞춤 — 반드시 반영] 알레르기(절대 사용 금지): ${ME.allergies.length?ME.allergies.join(", "):"없음"} / 식성: ${ME.diet.length?ME.diet.join(", "):"없음"}. 알레르기 재료는 요리·재료·단계에서 완전히 빼고, 그 재료가 핵심인 요리는 아예 추천하지 말거나 안전한 대체재로 바꿔서 제시해. 식성(채식·저염식·다이어트·매운 거 못 먹음 등)도 반영해서 맞는 요리를 우선 추천해.`
+      : "";
     if(mode==="dish"){
       prompt=`너는 요리 초보를 돕는 다정한 AI야. JSON만 출력해(설명·마크다운 없이).
 형식:{"mode":"dish","dish":"요리 이름","percent":0~100 정수,"verdict":"짧은 판정","cheer":"안심시키는 한 문장","time":"조리시간 예:15분","cookLevel":"쉬움|보통|어려움","washLevel":"설거지 정도 예:냄비 1개|팬+볼 2개","ingredients":[{"item":"재료명","amount":"분량 예:3개|1큰술|200g"}],"have":["가진 재료 중 쓰는 것"],"missing":[{"item":"없는 재료","optional":true나 false,"substitute":"대체재 또는 null","note":"없어도 되는지/대체 시 맛 변화를 초보 눈높이로"}],"steps":[{"text":"초보 눈높이 조리 단계","use":["이 단계에서 쓰는 재료와 분량"]}]}
@@ -1916,13 +1920,13 @@ steps는 4~6개. 각 단계의 use에는 그 단계에서 넣는 재료를 분�
 특수재료(치킨스톡·굴소스 등)는 없으면 optional:true, 대체 가능하면 substitute 채워서 초보가 포기 안 하게.
 steps는 요리 초보용으로 아주 쉽게 써. 애매한 양·불세기·상태는 반드시 괄호로 구체화: "우유를 넣어요(3~4스푼, 종이컵 1/4)", "중불에서(가스레인지 4~5)", "노릇해질 때까지(가장자리가 연갈색)". 계량·불세기·완성기준을 초보가 바로 알 수 있게.
 요리:${lastDish}
-가진 재료:${ingB.length?ingB.join(", "):"(안 적음 — 기본 양념 있다고 가정)"}`;
+가진 재료:${ingB.length?ingB.join(", "):"(안 적음 — 기본 양념 있다고 가정)"}${me}`;
     } else {
       prompt=`너는 요리 초보를 돕는 다정한 AI야. JSON만 출력해(설명·마크다운 없이).
 형식:{"mode":"ing","suggestions":[{"dish":"요리 이름","percent":0~100 정수,"summary":"한 줄 소개","missingBrief":"부족하면 짧게, 없으면 '지금 바로 가능'"}]}
 가진 재료로 지금/거의 만들 수 있는 쉬운 요리를 완성도 높은 순 3~4개.
 재료가 1~2개뿐이어도 반드시 그 재료만으로 할 수 있는 가장 간단한 요리를 알려줘(예: 감자 하나면 감자채볶음·감자전, 양파 하나면 양파볶음, 두부 하나면 두부부침·두부조림). 재료가 적을수록 "이것만으로도 돼요"라는 안심을 줘. 흔한 짝꿍 재료(간장·소금·기름 등 기본양념)는 집에 있다고 가정하고 제안해.
-가진 재료:${ingA.join(", ")}`;
+가진 재료:${ingA.join(", ")}${me}`;
     }
     try{
       const data=await callAI({max_tokens:1500,messages:[{role:"user",content:prompt}]});
