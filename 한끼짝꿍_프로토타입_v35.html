@@ -1247,8 +1247,25 @@
   // 알러지 → 대체재 매핑 (능동 추천용)
   const SUB_MAP={ "우유":"오트밀크(귀리우유)나 두유","계란":"두부나 으깬 감자","밀(글루텐)":"쌀가루나 쌀국수면","대두":"코코넛아미노스","갑각류":"버섯이나 두부","생선":"닭가슴살" };
 
+  // 저장 영속성 — 새로고침해도 로그인·알레르기·식성·레시피북·통계 유지 (같은 기기)
+  function saveME(){
+    try{ localStorage.setItem("hankki_me", JSON.stringify({
+      loggedIn:ME.loggedIn, name:ME.name, allergies:ME.allergies, diet:ME.diet,
+      recent:ME.recent, book:ME.book, cookCount:ME.cookCount,
+      ingredientsUsed:Array.from(ME.ingredientsUsed||[])
+    })); }catch(e){}
+  }
+  function loadME(){
+    try{ const s=localStorage.getItem("hankki_me"); if(!s) return;
+      const d=JSON.parse(s);
+      ME.loggedIn=!!d.loggedIn; ME.name=d.name||""; ME.allergies=d.allergies||[]; ME.diet=d.diet||[];
+      ME.recent=d.recent||[]; ME.book=d.book||[]; ME.cookCount=d.cookCount||0;
+      ME.ingredientsUsed=new Set(d.ingredientsUsed||[]);
+    }catch(e){}
+  }
+
   function toggleLogin(){
-    if(ME.loggedIn){ ME.loggedIn=false; renderMe(); }   // 로그아웃은 바로
+    if(ME.loggedIn){ ME.loggedIn=false; saveME(); renderMe(); }   // 로그아웃은 바로
     else openLogin();                                     // 로그인은 창을 띄움
   }
   function openLogin(){
@@ -1266,6 +1283,7 @@
     const v=(document.getElementById("loginName").value||"").trim();
     ME.name = v || "한끼러버";
     ME.loggedIn=true;
+    saveME();
     closeLogin();
     renderMe();
   }
@@ -1294,6 +1312,7 @@
   function toggleAllergy(a){
     const i=ME.allergies.indexOf(a);
     if(i>=0) ME.allergies.splice(i,1); else ME.allergies.push(a);
+    saveME();
     renderAllergy();
   }
   function renderDiet(){
@@ -1302,6 +1321,7 @@
   function toggleDiet(d){
     const i=ME.diet.indexOf(d);
     if(i>=0) ME.diet.splice(i,1); else ME.diet.push(d);
+    saveME();
     renderDiet();
   }
   function addRecent(dish){
@@ -1314,6 +1334,7 @@
     const d=DEMO[dish];
     if(d&&d.ingredients) d.ingredients.forEach(i=>ME.ingredientsUsed.add(i.item));
     ingA.forEach(i=>ME.ingredientsUsed.add(i));
+    saveME();
   }
   function renderStats(){
     const c=document.getElementById("statCook"), i=document.getElementById("statIng"), b=document.getElementById("statBook");
@@ -1360,6 +1381,7 @@
     const name=document.getElementById("regName").value.trim();
     if(!name){ document.getElementById("regName").focus(); return; }
     ME.book.unshift({ name, emoji:"🍳", by:`${ME.name||"나"} 님의 레시피` });
+    saveME();
     closeRegister();
     renderBook();
   }
@@ -1367,6 +1389,7 @@
   function saveToBook(dish, emoji){
     if(!ME.book.find(r=>r.name===dish)){
       ME.book.unshift({ name:dish, emoji:emoji||"🍽️", by:"한끼요정 추천" });
+      saveME();
     }
   }
 
@@ -2275,6 +2298,7 @@ steps는 요리 초보용으로 아주 쉽게 써. 애매한 양·불세기·상
   function renderExplore(){ renderExCats(); renderExHot(); renderExHotCards(); renderExFeed(); }
   window.renderExplore=renderExplore;
 
+  loadME(); renderMe();   // 저장된 로그인·설정 복원
   renderRail(); renderChips(); renderDemoResult("계란");
 </script>
 </body>
